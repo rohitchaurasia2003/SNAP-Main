@@ -50,26 +50,34 @@ def get_trained_model():
     
     for student in student_db:
         embedding = student.get('face_embedding')
-        if embedding:
-            X.append(np.array(embedding))
-            y.append(student.get('student_id'))
+        student_id = student.get('student_id')
+        if embedding is None or student_id is None:
+            continue
 
-    if len(X) ==0:
-        return 0
-    
-    clf = SVC(kernel='linear', probability=True, class_weight='balanced')
+        try:
+            vector = np.asarray(embedding, dtype=np.float64)
+        except (TypeError, ValueError):
+            continue
+        if vector.shape != (128,) or not np.all(np.isfinite(vector)):
+            continue
 
-    try:
+        X.append(vector)
+        y.append(student_id)
+
+    if not X:
+        return None
+
+    clf = None
+    if len(set(y)) > 1:
+        clf = SVC(kernel='linear', class_weight='balanced')
         clf.fit(X, y)
-    except ValueError:
-        pass
 
     return {'clf': clf, 'X':X, "y":y}
 
 
 
 def train_classifier():
-    st.cache_resource.clear()
+    get_trained_model.clear()
     model_data = get_trained_model()
     return bool(model_data)
 
@@ -93,9 +101,9 @@ def predict_attendance(class_image_np):
 
     for encoding in encodings:
         if len(all_students)>= 2:
-            predicted_id= int(clf.predict([encoding])[0])
+            predicted_id = clf.predict([encoding])[0]
         else:
-            predicted_id = int(all_students[0])
+            predicted_id = all_students[0]
 
         student_embedding = X_train[y_train.index(predicted_id)]
 

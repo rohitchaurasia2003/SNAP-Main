@@ -10,6 +10,9 @@ def main():
     if 'login-type' not in st.session_state:
         st.session_state['login-type']=None
 
+    if st.query_params.get('join-code') and st.session_state['login-type'] is None:
+        st.session_state['login-type'] = 'student'
+
 
     match st.session_state['login-type']:
         case 'teacher':
