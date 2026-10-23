@@ -53,7 +53,7 @@ def teacher_dashboard():
         st.subheader(f"""Welcome, {teacher_data['name']} """)
         if st.button("Logout", type='secondary', key='loginbackbtn', shortcut="control+backspace"):
             st.session_state['is_logged_in'] = False
-            st.session_state['login-type'] = None
+            st.session_state['login_type'] = None
             st.session_state['teacher_login_type'] = 'login'
             st.session_state.pop('teacher_data', None)
             st.session_state.pop('user_role', None)
@@ -337,7 +337,7 @@ def teacher_screen_login():
         header_dashboard()
     with c2:
         if st.button("Go back to Home", type='secondary', key='loginbackbtn', shortcut="control+backspace"):
-            st.session_state['login-type'] = None
+            st.session_state['login_type'] = None
             st.rerun()
 
     st.header('Login using password', text_alignment='center')
@@ -395,7 +395,7 @@ def teacher_screen_register():
         header_dashboard()
     with c2:
         if st.button("Go back to Home", type='secondary', key='loginbackbtn', shortcut="control+backspace"):
-            st.session_state['login-type'] = None
+            st.session_state['login_type'] = None
             st.rerun()
 
 
