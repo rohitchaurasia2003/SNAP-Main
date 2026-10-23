@@ -8,3 +8,4 @@ venv/
 .streamlit/
 dist/
 .pytest_cache
+.devcontainer
