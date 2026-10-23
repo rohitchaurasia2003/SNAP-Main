@@ -1,9 +1,9 @@
 import streamlit as st
 
-from src.ui.base_layout import style_background_dashboard , style_base_layout
-from src.components.header import header_dashboard
 from src.components.footer import footer_dashboard
+from src.components.header import header_dashboard
 from src.database.db import check_teacher_exists, create_teacher, teacher_login
+from src.ui.base_layout import style_background_dashboard, style_base_layout
 
 
 def _set_teacher_login_type(login_type: str) -> None:
@@ -11,44 +11,45 @@ def _set_teacher_login_type(login_type: str) -> None:
 
 
 def teacher_screen():
+    if 'teacher_login_type' not in st.session_state:
+        st.session_state.teacher_login_type = 'login'
 
     style_base_layout()
     style_background_dashboard()
 
-    
-    if "teacher_data" in st.session_state:
+    if 'teacher_data' in st.session_state and st.session_state.teacher_data is not None:
         teacher_dashboard()
-    elif 'teacher_login_type' not in st.session_state or st.session_state.teacher_login_type=="login":
+    elif st.session_state.teacher_login_type == 'login':
         teacher_screen_login()
-    elif st.session_state.teacher_login_type == "register":
+    elif st.session_state.teacher_login_type == 'register':
         teacher_screen_register()
-
-
-
+    else:
+        teacher_screen_login()
 
 
 def teacher_dashboard():
-    teacher_data = st.session_state.teacher_data
+    teacher_data = st.session_state.get('teacher_data')
+    if not teacher_data:
+        st.session_state.teacher_login_type = 'login'
+        teacher_screen_login()
+        return
 
-    st.header(f'''Welcome, {teacher_data['name']}''')
-    
+    st.header(f"Welcome, {teacher_data['name']}")
+
 
 def login_teacher(username, password):
     if not username or not password:
         return False
-    
+
     teacher = teacher_login(username, password)
 
     if teacher:
-        st.session_state.user_role ='teacher'
+        st.session_state.user_role = 'teacher'
         st.session_state.teacher_data = teacher
         st.session_state.is_logged_in = True
         return True
-    
 
     return False
-
-
 
 
 def teacher_screen_login():
@@ -56,7 +57,7 @@ def teacher_screen_login():
     with c1:
         header_dashboard()
     with c2:
-        if st.button("Go back to Home", type='secondary', key='loginbackbtn', shortcut="control+backspace"):
+        if st.button('Go back to Home', type='secondary', key='loginbackbtn', shortcut='control+backspace'):
             st.session_state['login-type'] = None
             st.rerun()
 
@@ -64,31 +65,29 @@ def teacher_screen_login():
     st.space()
     st.space()
 
-
-    teacher_username = st.text_input("Enter username", placeholder='xyz')
-
-    teacher_pass = st.text_input("Enter password", type='password', placeholder="**********")
+    teacher_username = st.text_input('Enter username', placeholder='xyz')
+    teacher_pass = st.text_input('Enter password', type='password', placeholder='**********')
 
     st.divider()
 
-    btnc1 , btnc2= st.columns(2)
+    btnc1, btnc2 = st.columns(2)
 
     with btnc1:
-        if st.button('Login', icon=':material/passkey:', shortcut='control+enter', width='stretch'):
+        if st.button('Login', icon=':material/passkey:', shortcut='control+enter', use_container_width=True):
             if login_teacher(teacher_username, teacher_pass):
-                st.toast("welcome back!", icon="👋")
+                st.toast('welcome back!', icon='👋')
                 import time
                 time.sleep(1)
                 st.rerun()
             else:
-                st.error("Invalid username and password combo")
+                st.error('Invalid username and password combo')
 
     with btnc2:
         st.button(
             'Register Instead',
-            type="primary",
+            type='primary',
             icon=':material/passkey:',
-            width='stretch',
+            use_container_width=True,
             on_click=_set_teacher_login_type,
             args=('register',),
         )
@@ -98,18 +97,17 @@ def teacher_screen_login():
 
 def register_teacher(teacher_username, teacher_name, teacher_pass, teacher_pass_confirm):
     if not teacher_username or not teacher_name or not teacher_pass:
-        return False, "All Fields are required!"
+        return False, 'All Fields are required!'
     if check_teacher_exists(teacher_username):
-        return False, "Username already taken"
+        return False, 'Username already taken'
     if teacher_pass != teacher_pass_confirm:
         return False, "Password doesn't match"
-    
+
     try:
         create_teacher(teacher_username, teacher_pass, teacher_name)
-        return True, "Sucessfully Created! Login Now"
-    except Exception as e:
-        return False, "Unexpected Error!"
-
+        return True, 'Sucessfully Created! Login Now'
+    except Exception:
+        return False, 'Unexpected Error!'
 
 
 def teacher_screen_register():
@@ -117,51 +115,42 @@ def teacher_screen_register():
     with c1:
         header_dashboard()
     with c2:
-        if st.button("Go back to Home", type='secondary', key='loginbackbtn', shortcut="control+backspace"):
+        if st.button('Go back to Home', type='secondary', key='loginbackbtn', shortcut='control+backspace'):
             st.session_state['login-type'] = None
             st.rerun()
-                
-                
-                
+
     st.header('Register teacher profile')
     st.space()
-    teacher_username = st.text_input("Enter username", placeholder='xyz')
-
-    teacher_name = st.text_input("Enter name", placeholder='xyz')
-
-    teacher_pass = st.text_input("Enter password", type='password', placeholder="**********")
-
-    teacher_pass_confirm = st.text_input("Confirm your password", type='password', placeholder="**********")
-
-
+    teacher_username = st.text_input('Enter username', placeholder='xyz')
+    teacher_name = st.text_input('Enter name', placeholder='xyz')
+    teacher_pass = st.text_input('Enter password', type='password', placeholder='**********')
+    teacher_pass_confirm = st.text_input('Confirm your password', type='password', placeholder='**********')
 
     st.divider()
-    
-    btnc1 , btnc2= st.columns(2)
-    
+
+    btnc1, btnc2 = st.columns(2)
+
     with btnc1:
-        if st.button('Register now', icon=':material/passkey:', shortcut='control+enter', width='stretch'):
+        if st.button('Register now', icon=':material/passkey:', shortcut='control+enter', use_container_width=True):
             success, message = register_teacher(teacher_username, teacher_name, teacher_pass, teacher_pass_confirm)
             if success:
                 st.success(message)
                 import time
                 time.sleep(2)
-                st.session_state.teacher_login_type = "login"
+                st.session_state.teacher_login_type = 'login'
                 st.rerun()
             else:
                 st.error(message)
 
-
-
     with btnc2:
         st.button(
             'Login Instead',
-            type="primary",
+            type='primary',
             icon=':material/passkey:',
-            width='stretch',
+            use_container_width=True,
             on_click=_set_teacher_login_type,
             args=('login',),
         )
-    
+
     footer_dashboard()
         

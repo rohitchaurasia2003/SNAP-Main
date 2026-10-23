@@ -1,8 +1,11 @@
+import os
+
 import streamlit as st
+from supabase import Client, create_client
 
-from supabase import create_client, Client
+SUPABASE_URL = st.secrets.get('SUPABASE_URL') or os.getenv('SUPABASE_URL')
+SUPABASE_KEY = st.secrets.get('SUPABASE_KEY') or os.getenv('SUPABASE_KEY')
 
-supabase: Client = create_client(
-    st.secrets['SUPABASE_URL'],
-    st.secrets['SUPABASE_KEY']
+supabase: Client | None = (
+    create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 )
